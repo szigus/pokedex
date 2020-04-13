@@ -1,4 +1,5 @@
 import { PokmeonStatColor, PokemonColors, Nullable } from './types';
+import { POKEMON_TYPE_COLOR, POKEMON_STAT_COLOR } from './enums';
 
 // tslint:disable no-empty-interface
 export interface IPokemonColor extends PokemonColors {}
@@ -8,6 +9,7 @@ export interface IPokemonStatColor extends PokmeonStatColor {}
 interface IDataTableHeader {
   text: string;
   align: string;
+  sortable: boolean;
   value: string;
 }
 
@@ -16,11 +18,18 @@ interface INameUrl {
   url: string;
 }
 
+interface IGeneralError {
+  msg: string;
+  code: number;
+}
+
 export interface IDashboardData {
   loading: boolean;
   search: string;
   headers: IDataTableHeader[];
-  pokemons: INameUrl[];
+  pokemons: Nullable<INameUrl>;
+  errorToShow: boolean;
+  error: IGeneralError;
 }
 
 export interface IPokeData {
@@ -63,6 +72,16 @@ export interface IPokeData {
 
 export interface IPokemonDetailsData {
   loading: boolean;
+  errorToShow: boolean;
+  error: IGeneralError;
   movesHeaders: IDataTableHeader[];
   pokeData: Nullable<IPokeData>;
+}
+
+export interface IPokemonDetailsMethods {
+  fetchData: () => void;
+  getTypeColor: (val: POKEMON_TYPE_COLOR) => string;
+  getStatColor: (val: POKEMON_STAT_COLOR) => string;
+  isHiddenAbility: (hidden: boolean, name: string) => string;
+  nameConvert: (name: string) => string;
 }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!loading">
+    <div v-if="!loading && !errorToShow">
       <v-btn to="/" small>back</v-btn>
       <v-row>
 
@@ -64,7 +64,7 @@
             <v-card-text class="justify-center">
               <v-img 
                 :src="pokeData.sprites.front_default || undefined"
-                lazy-src="../assets/default-avatar.png"
+                lazy-src="img/default-avatar.png"
                 :alt="pokeData.name"
                 max-height="350px"
                 contain
@@ -86,37 +86,14 @@
               Forms
             </v-card-title>
 
-            <!-- <v-card-text class="d-flex d-xs-none justify-center align-center">
-              <v-row>
-                <v-col cols="4" v-for="(form, index) in pokeData.forms" :key="index">
-                  <v-avatar color="#ff6600" size="62">
-                    <span class="white--text headline">{{ form.name[0].toUpperCase() }}</span>
-                  </v-avatar><br>
-                  <span class="ml-1">{{ form.name }}</span>
-                  <span v-if="index !== pokeData.forms.length-1" class="poke__arrow ml-2 mr-4">&#8594;</span>
-                </v-col>
-              </v-row>                  
-            </v-card-text> -->
-
-            <v-card-text class="d-flex d-xs-none justify-center align-center">
+            <v-card-text class="d-flex justify-space-around">
               <div v-for="(form, index) in pokeData.forms" :key="index">
-                <v-avatar color="#ff6600" size="60">
-                  <span class="white--text headline">{{ form.name[0].toUpperCase() }}</span>
+                <span>{{ form.name }}</span><br>
+                <v-avatar color="#ff6600" size="60" >
+                  <span class="white--text headline">{{ index + 1 }}</span>
                 </v-avatar>
-                <span class="ml-1">{{ form.name }}</span>
-                <span v-if="index !== pokeData.forms.length-1" class="poke__arrow ml-2 mr-4">&#8594;</span>
               </div>                    
             </v-card-text>
-
-            <!-- <v-card-text class="d-flex d-sm-none flex-column align-center justify-center">
-              <div v-for="(form, index) in pokeData.forms" :key="index">
-                <v-avatar color="#ff6600" size="62">
-                  <span class="white--text headline">{{ form.name[0].toUpperCase() }}</span>
-                </v-avatar>
-                <span class="ml-1">{{ form.name }}</span><br>
-                <span v-if="index !== pokeData.forms.length-1" class="poke__arrow">&#8595;</span>
-              </div>                    
-            </v-card-text> -->
 
           </v-card>
         </v-col>
@@ -162,13 +139,15 @@
 
       </v-row>
     </div>
+
+    <div v-else-if="errorToShow" class="text-center">
+      <error-handler
+        :receivedError="error"
+      ></error-handler>
+    </div>
+
     <div v-else class="text-center">
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        :width="10"
-        :size="100"
-      ></v-progress-circular>
+      <loading-component />
     </div>
   </div>
 </template>
@@ -177,14 +156,31 @@
   import Vue from 'vue';
   import axios, { AxiosResponse, AxiosError } from 'axios';
   import router from '../router';
-  import { IPokemonColor, IPokemonStatColor, IPokemonDetailsData, IPokeData } from '../interfaces';
+  import {
+    IPokemonColor,
+    IPokemonStatColor,
+    IPokemonDetailsData,
+    IPokeData,
+    IPokemonDetailsMethods } from '../interfaces';
   import { POKEMON_TYPE_COLOR, POKEMON_STAT_COLOR } from '../enums';
+  import ErrorHandler from '../components/errorHandler.vue';
+  import LoadingComponent from '../components/loadingComponent.vue';
 
-  export default Vue.extend({
+  export default Vue.extend<
+    IPokemonDetailsData,
+    IPokemonDetailsMethods,
+    {}
+  >({
     name: 'PokemonDetails',
+    components: { ErrorHandler, LoadingComponent },
     data(): IPokemonDetailsData {
       return {
         loading: true,
+        errorToShow: false,
+        error: {
+          msg: '',
+          code: 0,
+        },
         pokeData: {
           order: 1,
           name:	'bulbasaur',
@@ -464,6 +460,7 @@
           {
             text: '',
             align: 'left',
+            sortable: false,
             value: 'move.name',
           },
         ],
@@ -473,13 +470,20 @@
       fetchData(): void {
         axios.get('https://pokeapi.co/api/v2/pokemon/' + this.$route.params.name)
         .then((response: AxiosResponse<IPokeData>): void => {
-          this.pokeData = null;
+          /* this.pokeData = null; */
           this.pokeData = response.data;
           this.loading = false;
         })
         .catch((error: AxiosError | undefined): void => {
-          if (error && error.response && error.response.status === 404) {
-            router.replace('/404');
+          this.loading = false;
+          if (error && error.response) {
+            if (error.response.status === 404) {
+              router.replace('/404');
+            }
+
+            this.errorToShow = true;
+            this.error.msg = error.response.data;
+            this.error.code = error.response.status;
           }
         });
       },
@@ -528,11 +532,10 @@
       },
     },
     mounted() {
-      // this.loading = true;
-      this.loading = false;
+      this.loading = true;
     },
     created() {
-      // this.fetchData();
+      this.fetchData();
     },
   });
 </script>

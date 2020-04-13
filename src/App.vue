@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar
       app
-      src="./assets/pokemon_wallpaper.jpg"
+      src="img/pokemon_wallpaper.jpg"
     >
       <template v-slot:img="{ props }">
         <v-img

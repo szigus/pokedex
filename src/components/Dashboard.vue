@@ -25,13 +25,15 @@
 				</v-data-table>
   		</v-card>
 		</v-col>
+
+    <v-col v-else-if="errorToShow" cols="12" class="text-center">
+      <error-handler
+        :receivedError="error"
+      ></error-handler>
+    </v-col>
+
 		<v-col v-else cols="12" class="text-center">
-			<v-progress-circular
-        indeterminate
-        color="primary"
-        :width="10"
-        :size="100"
-      ></v-progress-circular>
+			<loading-component />
 		</v-col>
 	</v-row>
 </template>
@@ -41,104 +43,30 @@
   import axios, { AxiosResponse, AxiosError } from 'axios';
   import router from '../router';
   import { IDashboardData } from '../interfaces';
-
+  import ErrorHandler from '../components/errorHandler.vue';
+  import LoadingComponent from '../components/loadingComponent.vue';
 
   export default Vue.extend({
     name: 'Dashboard',
-
+    components: { ErrorHandler, LoadingComponent },
     data(): IDashboardData {
       return {
         loading: true,
+        errorToShow: false,
+        error: {
+          msg: '',
+          code: 0,
+        },
         search: '',
         headers: [
           {
             text: '',
             align: 'center',
+            sortable: false,
             value: 'name',
           },
         ],
-        pokemons: [
-          {
-            name: 'bulbasaur',
-            url: 'https://pokeapi.co/api/v2/pokemon/1/',
-          },
-          {
-            name: 'ivysaur',
-            url: 'https://pokeapi.co/api/v2/pokemon/2/',
-          },
-          {
-            name: 'venusaur',
-            url: 'https://pokeapi.co/api/v2/pokemon/3/',
-          },
-          {
-            name: 'charmander',
-            url: 'https://pokeapi.co/api/v2/pokemon/4/',
-          },
-          {
-            name: 'charmeleon',
-            url: 'https://pokeapi.co/api/v2/pokemon/5/',
-          },
-          {
-            name: 'charizard',
-            url: 'https://pokeapi.co/api/v2/pokemon/6/',
-          },
-          {
-            name: 'squirtle',
-            url: 'https://pokeapi.co/api/v2/pokemon/7/',
-          },
-          {
-            name: 'wartortle',
-            url: 'https://pokeapi.co/api/v2/pokemon/8/',
-          },
-          {
-            name: 'blastoise',
-            url: 'https://pokeapi.co/api/v2/pokemon/9/',
-          },
-          {
-            name: 'caterpie',
-            url: 'https://pokeapi.co/api/v2/pokemon/10/',
-          },
-          {
-            name: 'metapod',
-            url: 'https://pokeapi.co/api/v2/pokemon/11/',
-          },
-          {
-            name: 'butterfree',
-            url: 'https://pokeapi.co/api/v2/pokemon/12/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-          {
-            name: 'weedle',
-            url: 'https://pokeapi.co/api/v2/pokemon/13/',
-          },
-        ],
+        pokemons: null,
       };
     },
     methods: {
@@ -149,18 +77,24 @@
           this.loading = false;
         })
         .catch((error: AxiosError | undefined): void => {
-          if (error && error.response && error.response.status === 404) {
-            router.replace('/404');
+          if (error && error.response) {
+            if (error.response.status === 404) {
+              router.replace('/404');
+            }
+
+            this.errorToShow = true;
+            this.error.msg = error.response.data;
+            this.error.code = error.response.status;
           }
+          this.loading = false;
         });
       },
     },
     mounted() {
-      // this.loading = true;
-      this.loading = false;
+      this.loading = true;
     },
     created() {
-      // this.fetchData();
+      this.fetchData();
     },
   });
 </script>
