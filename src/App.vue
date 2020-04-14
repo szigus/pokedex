@@ -1,6 +1,9 @@
 <template>
   <v-app>
-    <v-app-bar app>
+    <v-app-bar 
+      app
+      :src="require('@/assets/pokemon_wallpaper.jpg')"
+    >
       <template v-slot:img="{ props }">
         <v-img
           v-bind="props"

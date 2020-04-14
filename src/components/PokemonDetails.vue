@@ -46,11 +46,11 @@
               <div 
                 v-for="stat in pokeData.stats"
                 :key="stat.stat.name">
-                 {{ stat.stat.name }} <span class="font-italic">({{ stat.base_stat }})</span>
+                 {{ stat.stat.name }} <span class="font-italic">({{ stat.base_stat }} / 255)</span>
                 <v-progress-linear
                   :color="getStatColor(stat.stat.name)"
                   height="10"
-                  :value="stat.base_stat"
+                  :value="getStatPercentage(stat.base_stat)"
                   striped
                   class="mb-2"
                 ></v-progress-linear>
@@ -64,7 +64,7 @@
             <v-card-text class="justify-center">
               <v-img 
                 :src="pokeData.sprites.front_default || undefined"
-                lazy-src="img/default-avatar.png"
+                :lazy-src="require('@/assets/default-avatar.png')"
                 :alt="pokeData.name"
                 max-height="350px"
                 contain
@@ -83,16 +83,19 @@
             </v-card-text>
 
             <v-card-title class="title">
-              Forms
+              Evolutions
             </v-card-title>
 
-            <v-card-text class="d-flex justify-space-around">
-              <div v-for="(form, index) in pokeData.forms" :key="index">
-                <span>{{ form.name }}</span><br>
+            <v-card-text v-if="pokeEvolution.length > 0" class="d-flex justify-space-around">
+              <div v-for="(form, index) in pokeEvolution" :key="index">
+                <a :href="`/pokemon/${form.name}`" class="evolution__link">{{ form.name }}</a><br>
                 <v-avatar color="#ff6600" size="60" >
                   <span class="white--text headline">{{ index + 1 }}</span>
                 </v-avatar>
               </div>                    
+            </v-card-text>
+            <v-card-text v-else class="d-flex justify-space-around">
+              This pokemon doesn't have evolution info                    
             </v-card-text>
 
           </v-card>
@@ -161,7 +164,9 @@
     IPokemonStatColor,
     IPokemonDetailsData,
     IPokeData,
-    IPokemonDetailsMethods } from '../interfaces';
+    IPokemonDetailsMethods,
+    IEvolutionData,
+    IEvolutionSpecies} from '../interfaces';
   import { POKEMON_TYPE_COLOR, POKEMON_STAT_COLOR } from '../enums';
   import ErrorHandler from '../components/errorHandler.vue';
   import LoadingComponent from '../components/loadingComponent.vue';
@@ -182,6 +187,7 @@
           code: 0,
         },
         pokeData: null,
+        pokeEvolution: [],
         movesHeaders: [
           {
             text: '',
@@ -197,7 +203,7 @@
         axios.get('https://pokeapi.co/api/v2/pokemon/' + this.$route.params.name)
         .then((response: AxiosResponse<IPokeData>): void => {
           this.pokeData = response.data;
-          this.loading = false;
+          this.fetchSpiecesInformation();
         })
         .catch((error: AxiosError | undefined): void => {
           this.loading = false;
@@ -211,6 +217,40 @@
             this.error.code = error.response.status;
           }
         });
+      },
+      fetchSpiecesInformation(): void {
+        axios.get('https://pokeapi.co/api/v2/pokemon-species/' + this.$route.params.name)
+        .then((resp: AxiosResponse): void => {
+          // -> evolution_chain: { URL: '...' }
+          this.fetchEvolutionData(resp.data.evolution_chain.url);
+        })
+        .catch((error: AxiosError | undefined): void => {
+          this.loading = false;
+          /* data extension API call only
+           no error handling required */
+        });
+      },
+      fetchEvolutionData(url: string | undefined): void {
+        if (url) {
+          axios.get(url)
+          .then((resp: AxiosResponse<IEvolutionData>): void => {
+
+            const evolutionCollector = (rawData: IEvolutionSpecies) => {
+              this.pokeEvolution.push({ name: rawData.species.name });
+              if (rawData.evolves_to && !!rawData.evolves_to.length) {
+                  evolutionCollector(rawData.evolves_to[0]);
+                }
+            };
+
+            evolutionCollector(resp.data.chain);
+            this.loading = false;
+          })
+          .catch((error: AxiosError | undefined): void => {
+            this.loading = false;
+            /* data extension API call only
+             no error handling required */
+          });
+        }
       },
       getTypeColor(val: POKEMON_TYPE_COLOR): string {
 
@@ -255,6 +295,9 @@
       nameConvert(name: string): string {
         return name.toUpperCase();
       },
+      getStatPercentage(amount: number): number {
+        return amount / 255 * 100;
+      },
     },
     mounted() {
       this.loading = true;
@@ -270,6 +313,16 @@
 .poke__arrow {
   font-size: 3rem;
   vertical-align: middle;
+}
+
+.evolution__link {
+  text-decoration: none;
+  color: black;
+}
+
+.evolution__link:hover,
+.evolution__link:active {
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .move__expansion {

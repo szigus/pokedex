@@ -23,6 +23,10 @@ interface IGeneralError {
   code: number;
 }
 
+interface IPokeEvolution {
+  name: Nullable<string>;
+}
+
 export interface IDashboardData {
   loading: boolean;
   search: string;
@@ -67,7 +71,6 @@ export interface IPokeData {
       version_group: INameUrl;
     }>;
   }>;
-  forms: INameUrl[];
 }
 
 export interface IPokemonDetailsData {
@@ -76,12 +79,25 @@ export interface IPokemonDetailsData {
   error: IGeneralError;
   movesHeaders: IDataTableHeader[];
   pokeData: Nullable<IPokeData>;
+  pokeEvolution: IPokeEvolution[];
 }
 
 export interface IPokemonDetailsMethods {
   fetchData: () => void;
+  fetchSpiecesInformation: () => void;
+  fetchEvolutionData: (url: string) => void;
   getTypeColor: (val: POKEMON_TYPE_COLOR) => string;
   getStatColor: (val: POKEMON_STAT_COLOR) => string;
   isHiddenAbility: (hidden: boolean, name: string) => string;
   nameConvert: (name: string) => string;
+  getStatPercentage: (amount: number) => number;
+}
+
+export interface IEvolutionSpecies {
+  species: INameUrl;
+  evolves_to?: IEvolutionSpecies[];
+}
+
+export interface IEvolutionData {
+  chain: IEvolutionSpecies;
 }
