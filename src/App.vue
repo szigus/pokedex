@@ -1,9 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      src="img/pokemon_wallpaper.jpg"
-    >
+    <v-app-bar app>
       <template v-slot:img="{ props }">
         <v-img
           v-bind="props"

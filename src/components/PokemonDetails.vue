@@ -196,7 +196,6 @@
       fetchData(): void {
         axios.get('https://pokeapi.co/api/v2/pokemon/' + this.$route.params.name)
         .then((response: AxiosResponse<IPokeData>): void => {
-          /* this.pokeData = null; */
           this.pokeData = response.data;
           this.loading = false;
         })
