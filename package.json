@@ -11,12 +11,12 @@
   "dependencies": {
     "axios": "^0.21.4",
     "core-js": "^2.6.12",
-    "vue": "^2.7.10",
+    "vue": "^3.5.13",
     "vue-class-component": "^7.0.2",
     "vue-property-decorator": "^8.5.1",
     "vue-router": "^3.6.5",
     "vuetify": "^2.2.11",
-    "vuex": "^3.6.2"
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@types/jest": "^23.3.14",
